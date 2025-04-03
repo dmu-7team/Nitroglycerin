@@ -6,9 +6,10 @@ public class Monster : MonoBehaviour
     public float attackDamage = 10f;
     public float attackCooldown = 1f;
     public float maxHealth = 50f;
-    public GameObject itemPrefab; // 체력 회복 아이템 프리팹
-    public float expReward = 10f; // 몬스터가 주는 경험치
-    public int coinReward = 1; // 몬스터가 주는 코인
+    public GameObject treasureChestPrefab; // 보물상자 프리팹
+    public float treasureChestDropChance = 0.5f; // 보물상자 드롭 확률 (50%)
+    public float expReward = 10f;
+    public int coinReward = 1;
 
     private Transform player;
     private Rigidbody rb;
@@ -91,35 +92,27 @@ public class Monster : MonoBehaviour
     {
         Debug.Log("Die 메서드 실행 시작");
 
-        // 체력 회복 아이템 드롭
-        if (itemPrefab != null)
+        // 보물상자 드롭
+        if (Random.value <= treasureChestDropChance)
         {
-            Vector3 dropPosition = transform.position;
-            dropPosition.y = 1.0f;
-            GameObject item = Instantiate(itemPrefab, dropPosition, Quaternion.identity);
-            Debug.Log("몬스터가 아이템을 드롭했습니다: " + item.name + ", 위치: " + dropPosition);
-        }
-        else
-        {
-            Debug.LogWarning("아이템 프리팹이 설정되지 않았습니다!", this);
-        }
-
-        // 경험치 추가
-        PlayerStats playerStats = FindFirstObjectByType<PlayerStats>(); // 수정된 부분
-        if (playerStats != null)
-        {
-            playerStats.AddExp(expReward);
-        }
-        else
-        {
-            Debug.LogError("PlayerStats를 찾을 수 없습니다! player 오브젝트에 PlayerStats 컴포넌트가 있는지 확인하세요.", this);
+            if (treasureChestPrefab != null)
+            {
+                Vector3 dropPosition = transform.position;
+                dropPosition.y = 1.0f;
+                GameObject chest = Instantiate(treasureChestPrefab, dropPosition, Quaternion.identity);
+                Debug.Log($"몬스터가 보물상자를 드롭했습니다: 위치: {dropPosition}");
+            }
+            else
+            {
+                Debug.LogWarning("보물상자 프리팹이 설정되지 않았습니다!", this);
+            }
         }
 
-        // 코인 추가
         if (GameManager.Instance != null)
         {
+            GameManager.Instance.AddExp(expReward);
             GameManager.Instance.AddCoin(coinReward);
-            Debug.Log($"몬스터 사망으로 코인 획득: {coinReward}");
+            Debug.Log($"몬스터 사망으로 경험치: {expReward}, 코인: {coinReward} 획득");
         }
         else
         {

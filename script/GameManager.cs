@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI damageText;
     public TextMeshProUGUI speedText;
     public TextMeshProUGUI itemEffectText;
-
+    public TextMeshProUGUI chestMessageText; // 보물상자 메시지 UI
     public float messageDisplayTime = 1f;
 
     private int coinCount = 0;
@@ -75,6 +75,25 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.LogError("ItemEffectText가 연결되지 않았습니다!", this);
+        }
+
+        if (chestMessageText != null)
+        {
+            chestMessageText.gameObject.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("ChestMessageText가 연결되지 않았습니다!", this);
+        }
+    }
+
+    public void ShowChestMessage()
+    {
+        if (chestMessageText != null)
+        {
+            chestMessageText.text = "보물상자를 열었습니다!";
+            chestMessageText.gameObject.SetActive(true);
+            StartCoroutine(FadeMessage(chestMessageText));
         }
     }
 
@@ -256,4 +275,7 @@ public class GameManager : MonoBehaviour
 
         messageText.gameObject.SetActive(false);
     }
+   
+
+    
 }

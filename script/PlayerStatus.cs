@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerStats : MonoBehaviour
 {
@@ -6,26 +7,28 @@ public class PlayerStats : MonoBehaviour
     public float expToLevelUp = 100f;
     public int level = 1;
 
-    // 플레이어 스탯
     public float maxHealth = 100f;
     public float currentHealth;
     public float attackDamage = 20f;
     public float moveSpeed = 5f;
 
-    // 레벨업 시 증가량
     public float healthIncreasePerLevel = 10f;
     public float damageIncreasePerLevel = 5f;
     public float speedIncreasePerLevel = 0.5f;
 
-    void Start()
+    private float originalSpeed;
+    private float originalDamage;
+
+    private void Start()
     {
         currentHealth = maxHealth;
+        originalSpeed = moveSpeed;
+        originalDamage = attackDamage;
     }
 
     public void AddExp(float exp)
     {
         currentExp += exp;
-        Debug.Log($"경험치 획득: {exp}, 현재 경험치: {currentExp}/{expToLevelUp}, 레벨: {level}");
 
         while (currentExp >= expToLevelUp)
         {
@@ -37,17 +40,13 @@ public class PlayerStats : MonoBehaviour
     {
         currentExp -= expToLevelUp;
         level++;
-        expToLevelUp *= 1.5f; // 레벨업 시 필요 경험치 1.5배 증가
+        expToLevelUp *= 1.5f;
 
-        // 스탯 증가
         maxHealth += healthIncreasePerLevel;
-        currentHealth = maxHealth; // 체력 회복
+        currentHealth = maxHealth;
         attackDamage += damageIncreasePerLevel;
         moveSpeed += speedIncreasePerLevel;
 
-        Debug.Log($"레벨업! 현재 레벨: {level}, 체력: {maxHealth}, 공격력: {attackDamage}, 이동 속도: {moveSpeed}");
-
-        // GameManager를 통해 레벨업 알림 표시
         if (GameManager.Instance != null)
         {
             GameManager.Instance.ShowLevelUpMessage();
@@ -57,7 +56,6 @@ public class PlayerStats : MonoBehaviour
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
-        Debug.Log($"플레이어 체력: {currentHealth}/{maxHealth}");
         if (currentHealth <= 0)
         {
             Die();
@@ -66,7 +64,40 @@ public class PlayerStats : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("플레이어가 사망했습니다!");
-        // 게임 오버 로직 추가 (예: 게임 오버 화면 표시)
+        Debug.Log("플레이어 사망");
+    }
+
+    public void ApplySpeedBoost(float amount, float duration)
+    {
+        StopCoroutine("SpeedBoostCoroutine");
+        StartCoroutine(SpeedBoostCoroutine(amount, duration));
+    }
+
+    public void ApplyDamageBoost(float amount, float duration)
+    {
+        StopCoroutine("DamageBoostCoroutine");
+        StartCoroutine(DamageBoostCoroutine(amount, duration));
+    }
+
+    private IEnumerator SpeedBoostCoroutine(float amount, float duration)
+    {
+        moveSpeed = originalSpeed * amount;
+        Debug.Log($"SpeedBoost 활성화: 현재 속도 = {moveSpeed}");
+
+        yield return new WaitForSeconds(duration);
+
+        moveSpeed = originalSpeed;
+        Debug.Log("SpeedBoost 종료: 속도가 원래대로 돌아왔습니다.");
+    }
+
+    private IEnumerator DamageBoostCoroutine(float amount, float duration)
+    {
+        attackDamage = originalDamage * amount;
+        Debug.Log($"DamageBoost 활성화: 현재 공격력 = {attackDamage}");
+
+        yield return new WaitForSeconds(duration);
+
+        attackDamage = originalDamage;
+        Debug.Log("DamageBoost 종료: 공격력이 원래대로 돌아왔습니다.");
     }
 }

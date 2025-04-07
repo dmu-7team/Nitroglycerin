@@ -110,7 +110,7 @@ public class Monster : MonoBehaviour
 
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.AddExp(expReward);
+            GameManager.Instance.AddExperience(expReward);
             GameManager.Instance.AddCoin(coinReward);
             Debug.Log($"몬스터 사망으로 경험치: {expReward}, 코인: {coinReward} 획득");
         }

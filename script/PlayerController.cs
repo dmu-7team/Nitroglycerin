@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -28,19 +27,19 @@ public class PlayerController : MonoBehaviour
         inputActions.Player.Look.performed += ctx => playerLook.SetLookInput(ctx.ReadValue<Vector2>());
         inputActions.Player.Look.canceled += ctx => playerLook.SetLookInput(Vector2.zero);
 
-        // 수정된 부분: 입력 액션 이름을 Attack으로 변경
         inputActions.Player.Attack.performed += ctx => AttackMissile();
-        inputActions.Player.Interact.performed += ctx => OpenTreasureChest();
+
+        // Interact 버튼 (E) 수정 및 디버그 메시지 추가
+        inputActions.Player.Interact.performed += ctx =>
+        {
+            Debug.Log("E 버튼 눌림 - 보물상자를 여는 시도 중...");
+            OpenTreasureChest();
+        };
     }
 
     void OnDisable()
     {
         inputActions.Player.Disable();
-    }
-
-    void Start()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
     }
 
     void Update()
@@ -58,19 +57,19 @@ public class PlayerController : MonoBehaviour
         }
 
         GameObject missile = Instantiate(missilePrefab, missileSpawnPoint.position, missileSpawnPoint.rotation);
-        Debug.Log("미사일 발사 (Attack): " + missile.transform.position);
-    }
-
-    void LoadScene(string sceneName)
-    {
-        SceneManager.LoadScene(sceneName);
+        Debug.Log("미사일 발사: " + missile.transform.position);
     }
 
     void OpenTreasureChest()
     {
         if (isNearTreasureChest && currentChest != null)
         {
+            Debug.Log("보물상자를 열었습니다.");
             currentChest.OpenChest();
+        }
+        else
+        {
+            Debug.Log("보물상자가 근처에 없습니다.");
         }
     }
 
@@ -78,6 +77,7 @@ public class PlayerController : MonoBehaviour
     {
         if (other.CompareTag("TreasureChest"))
         {
+            Debug.Log("보물상자 범위 안에 들어왔습니다.");
             isNearTreasureChest = true;
             currentChest = other.GetComponent<TreasureChest>();
         }
@@ -87,8 +87,10 @@ public class PlayerController : MonoBehaviour
     {
         if (other.CompareTag("TreasureChest"))
         {
+            Debug.Log("보물상자 범위에서 벗어났습니다.");
             isNearTreasureChest = false;
             currentChest = null;
         }
     }
+
 }

@@ -9,19 +9,21 @@ public class Item : MonoBehaviour
     }
 
     public ItemType itemType;
-    public float effectAmount = 2f; // 효과 증가량 (속도: 2배, 데미지: 2배)
-    public float effectDuration = 10f; // 효과 지속 시간 (초)
+    public float effectAmount = 2f;
+    public float effectDuration = 10f;
+    public Sprite icon;  // 아이템 아이콘 이미지 추가
 
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            PlayerStats playerStats = other.GetComponent<PlayerStats>();
-            if (playerStats != null)
+            Inventory inventory = Inventory.instance;
+            if (inventory != null)
             {
-                GameManager.Instance.ApplyItemEffect(itemType, effectAmount, effectDuration);
-                Destroy(gameObject);
-                Debug.Log($"{itemType} 아이템 획득!");
+                if (inventory.AddItem(this))
+                {
+                    Debug.Log($"{itemType} 아이템을 인벤토리에 추가했습니다.");
+                }
             }
         }
     }

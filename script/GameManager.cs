@@ -15,8 +15,12 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI damageText;
     public TextMeshProUGUI speedText;
     public TextMeshProUGUI itemEffectText;
-    public TextMeshProUGUI chestMessageText; // 보물상자 메시지 UI
+    public TextMeshProUGUI chestMessageText;
     public float messageDisplayTime = 1f;
+
+    // 폰트와 머티리얼 직접 할당
+    public TMP_FontAsset notoSansKRFont; // Inspector에서 설정
+    public Material notoSansKRMaterial;  // Inspector에서 설정
 
     private int coinCount = 0;
     private PlayerStats playerStats;
@@ -46,44 +50,54 @@ public class GameManager : MonoBehaviour
             Debug.LogError("PlayerStats를 찾을 수 없습니다! player 오브젝트에 PlayerStats 컴포넌트가 있는지 확인하세요.", this);
         }
 
+        // 폰트와 머티리얼을 Resources 폴더에서 로드
+        notoSansKRFont = Resources.Load<TMP_FontAsset>("Fonts/NotoSansKR-Bold SDF");
+        notoSansKRMaterial = notoSansKRFont.material;
+
+        if (notoSansKRFont == null || notoSansKRMaterial == null)
+        {
+            Debug.LogError("NotoSansKR-Bold 폰트나 머티리얼이 Resources 폴더에서 로드되지 않았습니다.");
+            return;
+        }
+
+        // 폰트 설정 확인 및 적용
+        ApplyFontToText(coinText, "CoinText");
+        ApplyFontToText(coinMessageText, "CoinMessageText");
+        ApplyFontToText(expText, "ExpText");
+        ApplyFontToText(levelUpMessageText, "LevelUpMessageText");
+        ApplyFontToText(healthText, "HealthText");
+        ApplyFontToText(damageText, "DamageText");
+        ApplyFontToText(speedText, "SpeedText");
+        ApplyFontToText(itemEffectText, "ItemEffectText");
+        ApplyFontToText(chestMessageText, "ChestMessageText");
+
         UpdateCoinText();
         UpdateExpText();
         UpdateStatsText();
+    }
 
-        if (coinMessageText != null)
+
+    void ApplyFontToText(TextMeshProUGUI text, string textName)
+    {
+        if (text != null)
         {
-            coinMessageText.gameObject.SetActive(false);
+            if (text.font == null || text.font.name != "NotoSansKR SDF")
+            {
+                if (notoSansKRFont != null && notoSansKRMaterial != null)
+                {
+                    text.font = notoSansKRFont;
+                    text.fontMaterial = notoSansKRMaterial;
+                    Debug.Log($"{textName}의 폰트를 NotoSansKR SDF로 설정했습니다.");
+                }
+                else
+                {
+                    Debug.LogError($"{textName}에 적용할 NotoSansKR SDF 폰트 또는 머티리얼이 Inspector에서 설정되지 않았습니다!", text);
+                }
+            }
         }
         else
         {
-            Debug.LogError("CoinMessageText가 연결되지 않았습니다!", this);
-        }
-
-        if (levelUpMessageText != null)
-        {
-            levelUpMessageText.gameObject.SetActive(false);
-        }
-        else
-        {
-            Debug.LogError("LevelUpMessageText가 연결되지 않았습니다!", this);
-        }
-
-        if (itemEffectText != null)
-        {
-            itemEffectText.gameObject.SetActive(false);
-        }
-        else
-        {
-            Debug.LogError("ItemEffectText가 연결되지 않았습니다!", this);
-        }
-
-        if (chestMessageText != null)
-        {
-            chestMessageText.gameObject.SetActive(false);
-        }
-        else
-        {
-            Debug.LogError("ChestMessageText가 연결되지 않았습니다!", this);
+            Debug.LogError($"{textName}가 연결되지 않았습니다!", this);
         }
     }
 
@@ -94,6 +108,7 @@ public class GameManager : MonoBehaviour
             chestMessageText.text = "보물상자를 열었습니다!";
             chestMessageText.gameObject.SetActive(true);
             StartCoroutine(FadeMessage(chestMessageText));
+            Debug.Log("ChestMessage 표시: 보물상자를 열었습니다!");
         }
     }
 
@@ -143,7 +158,7 @@ public class GameManager : MonoBehaviour
     {
         if (levelUpMessageText != null)
         {
-            levelUpMessageText.text = $"Level Up! Level {playerStats.level}"; // "레벨업! 레벨" -> "Level Up! Level"
+            levelUpMessageText.text = $"레벨업! 레벨 {playerStats.level}";
             levelUpMessageText.gameObject.SetActive(true);
             StartCoroutine(FadeMessage(levelUpMessageText));
             UpdateStatsText();
@@ -181,7 +196,8 @@ public class GameManager : MonoBehaviour
     {
         if (coinText != null)
         {
-            coinText.text = $"Coins: {coinCount}"; // "코인" -> "Coins"
+            coinText.text = $"코인: {coinCount}";
+            Debug.Log($"CoinText 설정: {coinText.text}");
         }
         else
         {
@@ -193,7 +209,7 @@ public class GameManager : MonoBehaviour
     {
         if (expText != null && playerStats != null)
         {
-            expText.text = $"Level: {playerStats.level} EXP: {playerStats.currentExp}/{playerStats.expToLevelUp}"; // "레벨", "경험치" -> "Level", "EXP"
+            expText.text = $"레벨: {playerStats.level} 경험치: {playerStats.currentExp}/{playerStats.expToLevelUp}";
             Debug.Log($"ExpText 업데이트: {expText.text}");
         }
         else
@@ -207,11 +223,11 @@ public class GameManager : MonoBehaviour
         if (playerStats != null)
         {
             if (healthText != null)
-                healthText.text = $"Health: {playerStats.currentHealth}/{playerStats.maxHealth}"; // "체력" -> "Health"
+                healthText.text = $"체력: {playerStats.currentHealth}/{playerStats.maxHealth}";
             if (damageText != null)
-                damageText.text = $"Damage: {playerStats.attackDamage * damageBoostMultiplier}"; // "공격력" -> "Damage"
+                damageText.text = $"공격력: {playerStats.attackDamage * damageBoostMultiplier}";
             if (speedText != null)
-                speedText.text = $"Speed: {playerStats.moveSpeed * speedBoostMultiplier}"; // "이동 속도" -> "Speed"
+                speedText.text = $"이동 속도: {playerStats.moveSpeed * speedBoostMultiplier}";
         }
     }
 
@@ -221,9 +237,9 @@ public class GameManager : MonoBehaviour
         {
             string effectText = "";
             if (speedBoostTimer > 0)
-                effectText += $"Speed Boost: {speedBoostTimer:F1}s\n"; // "속도 증가" -> "Speed Boost"
+                effectText += $"속도 증가: {speedBoostTimer:F1}초\n";
             if (damageBoostTimer > 0)
-                effectText += $"Damage Boost: {damageBoostTimer:F1}s"; // "데미지 증가" -> "Damage Boost"
+                effectText += $"데미지 증가: {damageBoostTimer:F1}초";
 
             if (!string.IsNullOrEmpty(effectText))
             {
@@ -241,7 +257,7 @@ public class GameManager : MonoBehaviour
     {
         if (coinMessageText != null)
         {
-            coinMessageText.text = $"Coins +{amount}"; // "코인" -> "Coins"
+            coinMessageText.text = $"코인 +{amount}";
             coinMessageText.gameObject.SetActive(true);
             StartCoroutine(FadeMessage(coinMessageText));
         }
@@ -275,7 +291,4 @@ public class GameManager : MonoBehaviour
 
         messageText.gameObject.SetActive(false);
     }
-   
-
-    
 }

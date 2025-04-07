@@ -1,2 +1,13 @@
 fileFormatVersion: 2
 guid: ceb775db3f9aec34394a986d735e8d4e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - speedBoostItemPrefab: {fileID: 7523300975004436460, guid: 5903939a2b0380c478f63912ca07d336, type: 3}
+  - damageBoostItemPrefab: {fileID: 8929268332195607950, guid: 5c4160bd492308442b32a655cdf02037, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -8,6 +9,9 @@ public class PlayerController : MonoBehaviour
     private PlayerInputActions inputActions;
     private Player_Look playerLook;
     private Player_Move playerMove;
+
+    private bool isNearTreasureChest = false;
+    private TreasureChest currentChest;
 
     void Awake()
     {
@@ -23,6 +27,10 @@ public class PlayerController : MonoBehaviour
         inputActions.Player.Move.canceled += ctx => playerMove.SetMoveInput(Vector2.zero);
         inputActions.Player.Look.performed += ctx => playerLook.SetLookInput(ctx.ReadValue<Vector2>());
         inputActions.Player.Look.canceled += ctx => playerLook.SetLookInput(Vector2.zero);
+
+        // ìˆ˜ì •ëœ ë¶€ë¶„: ì…ë ¥ ì•¡ì…˜ ì´ë¦„ì„ Attackìœ¼ë¡œ ë³€ê²½
+        inputActions.Player.Attack.performed += ctx => AttackMissile();
+        inputActions.Player.Interact.performed += ctx => OpenTreasureChest();
     }
 
     void OnDisable()
@@ -40,15 +48,47 @@ public class PlayerController : MonoBehaviour
         playerMove.Move();
         playerLook.Look();
     }
-    void FireMissile()
+
+    void AttackMissile()
     {
         if (missilePrefab == null || missileSpawnPoint == null)
         {
-            Debug.LogError("¹Ì»çÀÏ ÇÁ¸®ÆÕ ¶Ç´Â ¹ß»ç À§Ä¡°¡ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù!", this);
+            Debug.LogError("ë¯¸ì‚¬ì¼ í”„ë¦¬íŒ¹ ë˜ëŠ” ë°œì‚¬ ìœ„ì¹˜ê°€ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!", this);
             return;
         }
 
         GameObject missile = Instantiate(missilePrefab, missileSpawnPoint.position, missileSpawnPoint.rotation);
-        Debug.Log("¹Ì»çÀÏ ¹ß»ç: " + missile.transform.position);
+        Debug.Log("ë¯¸ì‚¬ì¼ ë°œì‚¬ (Attack): " + missile.transform.position);
+    }
+
+    void LoadScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
+
+    void OpenTreasureChest()
+    {
+        if (isNearTreasureChest && currentChest != null)
+        {
+            currentChest.OpenChest();
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("TreasureChest"))
+        {
+            isNearTreasureChest = true;
+            currentChest = other.GetComponent<TreasureChest>();
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("TreasureChest"))
+        {
+            isNearTreasureChest = false;
+            currentChest = null;
+        }
     }
 }

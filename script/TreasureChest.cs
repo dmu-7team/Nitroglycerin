@@ -2,73 +2,40 @@ using UnityEngine;
 
 public class TreasureChest : MonoBehaviour
 {
-    public GameObject speedBoostItemPrefab;
-    public GameObject damageBoostItemPrefab;
-    public float itemDropChance = 1f;
-
-    private bool isOpened = false;
-    private Rigidbody rb;
+    public GameObject rewardPrefab;  // 보물상자에서 생성될 보상 아이템 프리팹
+    public Transform rewardSpawnPoint; // 보상이 나타날 위치
+    public bool isOpen = false;  // 보물상자가 열렸는지 여부
+    public Animator chestAnimator;  // 보물상자의 애니메이터 (선택사항)
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
-        }
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Missile") && !isOpened)
-        {
-            OpenChest();
-            Destroy(collision.gameObject);
-            Debug.Log("미사일이 보물상자와 충돌하여 상자가 열렸습니다!");
-        }
+        if (chestAnimator == null)
+            chestAnimator = GetComponent<Animator>();
     }
 
     public void OpenChest()
     {
-        if (isOpened) return;
-
-        isOpened = true;
-
-        if (Random.value <= itemDropChance)
+        if (isOpen)
         {
-            GameObject itemPrefab = Random.value > 0.5f ? speedBoostItemPrefab : damageBoostItemPrefab;
-            if (itemPrefab != null)
-            {
-                Vector3 dropPosition = transform.position;
-                dropPosition.y += 1.0f;
-                GameObject item = Instantiate(itemPrefab, dropPosition, Quaternion.identity);
-                Debug.Log($"보물상자에서 {item.name}이 드롭되었습니다: 위치: {dropPosition}");
-            }
+            Debug.Log("이미 열려있는 보물상자입니다.");
+            return;
         }
 
-        if (GameManager.Instance != null)
+        isOpen = true;
+
+        // 보물상자 애니메이션 재생 (선택 사항)
+        if (chestAnimator != null)
         {
-            GameManager.Instance.ShowChestMessage();
+            chestAnimator.SetTrigger("Open");
         }
 
-        StartCoroutine(OpenAnimation());
-    }
+        Debug.Log("보물상자가 열렸습니다! 보상을 획득합니다.");
 
-    System.Collections.IEnumerator OpenAnimation()
-    {
-        float duration = 0.5f;
-        float elapsed = 0f;
-        Vector3 startPos = transform.position;
-        Vector3 endPos = startPos + Vector3.up * 0.5f;
-
-        while (elapsed < duration)
+        // 보상 생성
+        if (rewardPrefab != null && rewardSpawnPoint != null)
         {
-            elapsed += Time.deltaTime;
-            transform.position = Vector3.Lerp(startPos, endPos, elapsed / duration);
-            yield return null;
+            GameObject reward = Instantiate(rewardPrefab, rewardSpawnPoint.position, rewardSpawnPoint.rotation);
+            Debug.Log("보상이 나타났습니다: " + reward.name);
         }
-
-        Destroy(gameObject);
-        Debug.Log("보물상자가 열렸습니다!");
     }
 }

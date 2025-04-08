@@ -18,6 +18,7 @@ public class InventoryInput : MonoBehaviour
         inputActions.Player.UseSlot3.performed += ctx => UseItem(2);
 
         Debug.Log("Input Actions 연결 완료.");
+        Debug.Log($"PlayerStats 연결 상태: {(playerStats != null ? "정상 연결" : "null 에러 발생")}");
     }
 
     private void UseItem(int slotIndex)

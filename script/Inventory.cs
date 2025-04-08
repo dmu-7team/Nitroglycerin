@@ -36,7 +36,8 @@ public class Inventory : MonoBehaviour
                 slots[i].enabled = true;
 
                 Debug.Log($"{item.itemType} 아이템이 인벤토리 슬롯 {i + 1}에 추가되었습니다.");
-                Destroy(item.gameObject); // 씬에서 아이템 제거
+
+                item.gameObject.SetActive(false); // 아이템을 씬에서 비활성화 처리 (삭제 대신 비활성화)
 
                 return true;
             }
@@ -57,7 +58,6 @@ public class Inventory : MonoBehaviour
         {
             Debug.Log($"{items[slotIndex].itemType} 아이템을 사용합니다.");
 
-            // 아이템 효과 적용 (제대로 설정되었는지 확인)
             GameManager.Instance.ApplyItemEffect(
                 items[slotIndex].itemType,
                 items[slotIndex].effectAmount,
@@ -65,12 +65,16 @@ public class Inventory : MonoBehaviour
                 playerStats
             );
 
-            // 아이템 사용 후 초기화
+            // 아이템 사용 후 오브젝트 완전히 제거하기
+            Destroy(items[slotIndex].gameObject);
+
             items[slotIndex] = null;
             slots[slotIndex].sprite = null;
             slots[slotIndex].enabled = false;
 
             Debug.Log($"슬롯 {slotIndex + 1}이 비워졌습니다.");
+
+            GameManager.Instance.UpdateUI(); // UI 업데이트 호출 추가
         }
         else
         {

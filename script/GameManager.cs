@@ -83,7 +83,10 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning("정의되지 않은 아이템 타입입니다.");
                 break;
         }
+
+        UpdateUI(); // 아이템 사용 후 UI 갱신
     }
+
 
     public void AddCoin(int amount)
     {

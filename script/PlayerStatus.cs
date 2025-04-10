@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class PlayerStats : MonoBehaviour
+public class PlayerStatus : MonoBehaviour
 {
     public float currentExp = 0f;
     public float expToLevelUp = 100f;

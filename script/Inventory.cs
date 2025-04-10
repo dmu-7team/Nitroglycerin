@@ -1,84 +1,128 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using System;
 
 public class Inventory : MonoBehaviour
 {
     public static Inventory instance;
 
-    [Header("인벤토리 슬롯 UI")]
-    public Image[] slots;  // 3칸의 인벤토리 슬롯 (UI Image 배열)
-    private Item[] items;   // 실제로 보관되는 아이템 객체
+    [Serializable]
+    public class ItemSlot
+    {
+        public Box.ItemType itemType;
+        public Sprite icon;
+        public float effectAmount;
+        public float effectDuration;
+
+        public ItemSlot(Box.ItemType type, Sprite icon, float amount, float duration)
+        {
+            this.itemType = type;
+            this.icon = icon;
+            this.effectAmount = amount;
+            this.effectDuration = duration;
+        }
+    }
+
+    public Image[] slots;
+    private ItemSlot[] items;
+    private PlayerStatus playerStatus;
+    private PlayerInputActions inputActions;
 
     private void Awake()
     {
         if (instance == null)
-        {
             instance = this;
-            items = new Item[slots.Length];  // 슬롯 크기만큼 배열 초기화
-            Debug.Log($"인벤토리 초기화 완료. 슬롯 개수: {items.Length}");
-        }
-        else
+
+        playerStatus = GetComponent<PlayerStatus>();  // 같은 오브젝트에서 찾기
+
+        if (playerStatus == null)
         {
-            Destroy(gameObject);
+            // `playerStatus`가 여전히 null이라면, 다른 오브젝트에서 찾아서 연결
+            playerStatus = GameObject.Find("player").GetComponent<PlayerStatus>(); // "player" 오브젝트에서 찾기
+        }
+
+        if (playerStatus == null)
+        {
+            Debug.LogError("[Inventory] PlayerStatus가 연결되지 않았습니다! Player 오브젝트에 PlayerStatus 컴포넌트를 붙여주세요.");
         }
     }
 
-    public bool AddItem(Item item)
+    private void Start()
     {
-        Debug.Log($"아이템 추가 요청: {item.itemType}");
+        items = new ItemSlot[slots.Length];
 
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] != null)
+                slots[i].enabled = false;
+            else
+                Debug.LogError($"[Inventory-Start] slots[{i}]가 null입니다.");
+        }
+
+        inputActions = new PlayerInputActions();
+        inputActions.Player.Enable();
+
+        inputActions.Player.UseSlot1.performed += ctx => UseItem(0);
+        inputActions.Player.UseSlot2.performed += ctx => UseItem(1);
+        inputActions.Player.UseSlot3.performed += ctx => UseItem(2);
+    }
+
+
+    public bool AddItem(Box.ItemType itemType, Sprite icon, float amount, float duration)
+    {
         for (int i = 0; i < items.Length; i++)
         {
-            if (items[i] == null) // 빈 슬롯 찾기
+            if (items[i] == null)
             {
-                items[i] = item;  // 배열에 아이템 등록
-                slots[i].sprite = item.icon;
-                slots[i].enabled = true;
+                items[i] = new ItemSlot(itemType, icon, amount, duration);
 
-                Debug.Log($"{item.itemType} 아이템이 인벤토리 슬롯 {i + 1}에 추가되었습니다.");
-
-                item.gameObject.SetActive(false); // 아이템을 씬에서 비활성화 처리 (삭제 대신 비활성화)
+                if (slots[i] == null)
+                {
+                    Debug.LogError($"[Inventory] slots[{i}]가 null입니다. UI 연결 안 됐는지 확인해주세요.");
+                }
+                else
+                {
+                    slots[i].sprite = icon;
+                    slots[i].enabled = true;
+                }
 
                 return true;
             }
         }
+
         Debug.Log("인벤토리가 가득 찼습니다.");
         return false;
     }
 
-    public void UseItem(int slotIndex, PlayerStats playerStats)
+    private void UseItem(int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= items.Length)
+        if (playerStatus == null)
         {
-            Debug.LogError("잘못된 슬롯 번호입니다.");
+            Debug.LogError("[Inventory] playerStatus가 연결되지 않았습니다!");
             return;
         }
 
-        if (items[slotIndex] != null)
-        {
-            Debug.Log($"{items[slotIndex].itemType} 아이템을 사용합니다.");
+        if (slotIndex < 0 || slotIndex >= items.Length || items[slotIndex] == null) return;
 
-            GameManager.Instance.ApplyItemEffect(
-                items[slotIndex].itemType,
-                items[slotIndex].effectAmount,
-                items[slotIndex].effectDuration,
-                playerStats
-            );
+        var item = items[slotIndex];
 
-            // 아이템 사용 후 오브젝트 완전히 제거하기
-            Destroy(items[slotIndex].gameObject);
+        GameManager.Instance.ApplyItemEffect(item.itemType, item.effectAmount, item.effectDuration, playerStatus);
 
-            items[slotIndex] = null;
-            slots[slotIndex].sprite = null;
-            slots[slotIndex].enabled = false;
+        items[slotIndex] = null;
+        slots[slotIndex].sprite = null;
+        slots[slotIndex].enabled = false;
 
-            Debug.Log($"슬롯 {slotIndex + 1}이 비워졌습니다.");
+        GameManager.Instance.UpdateUI();
+    }
 
-            GameManager.Instance.UpdateUI(); // UI 업데이트 호출 추가
-        }
-        else
-        {
-            Debug.Log($"슬롯 {slotIndex + 1}은 이미 비어 있습니다.");
-        }
+    private void OnEnable()
+    {
+        inputActions?.Player.Enable();
+    }
+
+    private void OnDisable()
+    {
+        inputActions?.Player.Disable();
     }
 }

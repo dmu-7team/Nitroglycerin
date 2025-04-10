@@ -9,8 +9,8 @@ public class PlayerController : MonoBehaviour
     private Player_Look playerLook;
     private Player_Move playerMove;
 
-    private bool isNearTreasureChest = false;
-    private TreasureChest currentChest;
+    private bool isNearBox = false;
+    private Box currentBox;
 
     void Awake()
     {
@@ -29,11 +29,10 @@ public class PlayerController : MonoBehaviour
 
         inputActions.Player.Attack.performed += ctx => AttackMissile();
 
-        // Interact 버튼 (E) 수정 및 디버그 메시지 추가
         inputActions.Player.Interact.performed += ctx =>
         {
-            Debug.Log("E 버튼 눌림 - 보물상자를 여는 시도 중...");
-            OpenTreasureChest();
+            Debug.Log("E 버튼 눌림 - 상자 열기 시도 중...");
+            OpenBox();
         };
     }
 
@@ -60,37 +59,32 @@ public class PlayerController : MonoBehaviour
         Debug.Log("미사일 발사: " + missile.transform.position);
     }
 
-    void OpenTreasureChest()
+    void OpenBox()
     {
-        if (isNearTreasureChest && currentChest != null)
+        if (isNearBox && currentBox != null)
         {
-            Debug.Log("보물상자를 열었습니다.");
-            currentChest.OpenChest();
-        }
-        else
-        {
-            Debug.Log("보물상자가 근처에 없습니다.");
+            currentBox.Open(this.gameObject); //  올바른 인자 전달
         }
     }
 
+
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("TreasureChest"))
+        if (other.GetComponent<Box>() != null)
         {
-            Debug.Log("보물상자 범위 안에 들어왔습니다.");
-            isNearTreasureChest = true;
-            currentChest = other.GetComponent<TreasureChest>();
+            Debug.Log("상자 범위 안에 들어왔습니다.");
+            isNearBox = true;
+            currentBox = other.GetComponent<Box>();
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("TreasureChest"))
+        if (other.GetComponent<Box>() != null)
         {
-            Debug.Log("보물상자 범위에서 벗어났습니다.");
-            isNearTreasureChest = false;
-            currentChest = null;
+            Debug.Log("상자 범위에서 벗어났습니다.");
+            isNearBox = false;
+            currentBox = null;
         }
     }
-
 }

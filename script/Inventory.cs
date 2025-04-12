@@ -1,31 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
-using System;
 
 public class Inventory : MonoBehaviour
 {
     public static Inventory instance;
 
-    [Serializable]
-    public class ItemSlot
-    {
-        public Box.ItemType itemType;
-        public Sprite icon;
-        public float effectAmount;
-        public float effectDuration;
-
-        public ItemSlot(Box.ItemType type, Sprite icon, float amount, float duration)
-        {
-            this.itemType = type;
-            this.icon = icon;
-            this.effectAmount = amount;
-            this.effectDuration = duration;
-        }
-    }
-
     public Image[] slots;
-    private ItemSlot[] items;
+    private ItemData[] items;
+
     private PlayerStatus playerStatus;
     private PlayerInputActions inputActions;
 
@@ -34,30 +17,22 @@ public class Inventory : MonoBehaviour
         if (instance == null)
             instance = this;
 
-        playerStatus = GetComponent<PlayerStatus>();  // 같은 오브젝트에서 찾기
+        Debug.Log("[Inventory] 이 컴포넌트가 붙어 있는 오브젝트 이름: " + gameObject.name);
 
+        playerStatus = GetComponent<PlayerStatus>();
         if (playerStatus == null)
-        {
-            // `playerStatus`가 여전히 null이라면, 다른 오브젝트에서 찾아서 연결
-            playerStatus = GameObject.Find("player").GetComponent<PlayerStatus>(); // "player" 오브젝트에서 찾기
-        }
-
-        if (playerStatus == null)
-        {
-            Debug.LogError("[Inventory] PlayerStatus가 연결되지 않았습니다! Player 오브젝트에 PlayerStatus 컴포넌트를 붙여주세요.");
-        }
+            Debug.LogError("[Inventory] PlayerStatus 연결 실패! Player 오브젝트에 붙어 있어야 합니다.");
     }
+
 
     private void Start()
     {
-        items = new ItemSlot[slots.Length];
+        items = new ItemData[slots.Length];
 
         for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] != null)
                 slots[i].enabled = false;
-            else
-                Debug.LogError($"[Inventory-Start] slots[{i}]가 null입니다.");
         }
 
         inputActions = new PlayerInputActions();
@@ -68,22 +43,17 @@ public class Inventory : MonoBehaviour
         inputActions.Player.UseSlot3.performed += ctx => UseItem(2);
     }
 
-
-    public bool AddItem(Box.ItemType itemType, Sprite icon, float amount, float duration)
+    public bool AddItem(ItemData itemData)
     {
         for (int i = 0; i < items.Length; i++)
         {
             if (items[i] == null)
             {
-                items[i] = new ItemSlot(itemType, icon, amount, duration);
+                items[i] = itemData;
 
-                if (slots[i] == null)
+                if (slots[i] != null)
                 {
-                    Debug.LogError($"[Inventory] slots[{i}]가 null입니다. UI 연결 안 됐는지 확인해주세요.");
-                }
-                else
-                {
-                    slots[i].sprite = icon;
+                    slots[i].sprite = itemData.icon;
                     slots[i].enabled = true;
                 }
 
@@ -95,34 +65,20 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
-    private void UseItem(int slotIndex)
+    private void UseItem(int index)
     {
-        if (playerStatus == null)
-        {
-            Debug.LogError("[Inventory] playerStatus가 연결되지 않았습니다!");
-            return;
-        }
+        if (playerStatus == null) return;
+        if (index < 0 || index >= items.Length || items[index] == null) return;
 
-        if (slotIndex < 0 || slotIndex >= items.Length || items[slotIndex] == null) return;
+        var item = items[index];
 
-        var item = items[slotIndex];
+        playerStatus.ApplyItemEffect(item.itemType, item.effectAmount, item.effectDuration);
 
-        GameManager.Instance.ApplyItemEffect(item.itemType, item.effectAmount, item.effectDuration, playerStatus);
-
-        items[slotIndex] = null;
-        slots[slotIndex].sprite = null;
-        slots[slotIndex].enabled = false;
-
-        GameManager.Instance.UpdateUI();
+        items[index] = null;
+        slots[index].sprite = null;
+        slots[index].enabled = false;
     }
 
-    private void OnEnable()
-    {
-        inputActions?.Player.Enable();
-    }
-
-    private void OnDisable()
-    {
-        inputActions?.Player.Disable();
-    }
+    private void OnEnable() => inputActions?.Player.Enable();
+    private void OnDisable() => inputActions?.Player.Disable();
 }

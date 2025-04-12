@@ -43,6 +43,9 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
+    // 내부에 이 두 public 함수가 있어야 함
+ // PlayerStatus.cs 안에 아래 두 개 함수 추가!
+
 
     private void Update()
     {
@@ -89,7 +92,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(2f);
         levelUpMessageText.gameObject.SetActive(false);
     }
-    public void ApplyItemEffect(Box.ItemType itemType, float effectAmount, float duration, PlayerStatus playerStatus)
+    public void ApplyItemEffect(ItemData.ItemType itemType, float effectAmount, float duration, PlayerStatus playerStatus)
     {
         if (playerStatus == null)
         {
@@ -99,12 +102,12 @@ public class GameManager : MonoBehaviour
 
         switch (itemType)
         {
-            case Box.ItemType.SpeedBoost:
+            case ItemData.ItemType.SpeedBoost:
                 playerStatus.ApplySpeedBoost(effectAmount, duration);
                 Debug.Log($"[GameManager] SpeedBoost 적용됨: x{effectAmount}, {duration}초");
                 break;
 
-            case Box.ItemType.DamageBoost:
+            case ItemData.ItemType.DamageBoost:
                 playerStatus.ApplyDamageBoost(effectAmount, duration);
                 Debug.Log($"[GameManager] DamageBoost 적용됨: x{effectAmount}, {duration}초");
                 break;
@@ -112,5 +115,6 @@ public class GameManager : MonoBehaviour
 
         UpdateUI();
     }
+
 
 }

@@ -3,101 +3,110 @@ using System.Collections;
 
 public class PlayerStatus : MonoBehaviour
 {
-    public float currentExp = 0f;
-    public float expToLevelUp = 100f;
-    public int level = 1;
+    // ===== 체력 관련 =====
+    public int maxHealth = 100;
+    public int currentHealth;
 
-    public float maxHealth = 100f;
-    public float currentHealth;
-    public float attackDamage = 20f;
+    // ===== 기본 스탯 =====
     public float moveSpeed = 5f;
-
-    public float healthIncreasePerLevel = 10f;
-    public float damageIncreasePerLevel = 5f;
-    public float speedIncreasePerLevel = 0.5f;
-
+    public float attackDamage = 10f;
     private float originalSpeed;
     private float originalDamage;
 
-    private void Start()
+    // ===== 레벨 시스템 =====
+    public int level = 1;
+    public float currentExp = 0f;
+    public float expToLevelUp = 100f;
+    public float levelUpMultiplier = 1.2f;
+
+    private void Awake()
     {
         currentHealth = maxHealth;
         originalSpeed = moveSpeed;
         originalDamage = attackDamage;
     }
 
+    // ===== 체력 처리 =====
+    public void TakeDamage(int damage)
+    {
+        currentHealth -= damage;
+        if (currentHealth <= 0)
+        {
+            currentHealth = 0;
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        Debug.Log("[PlayerStatus] 플레이어 사망 처리");
+        // TODO: 게임오버, 리스폰 등
+    }
+
+    // ===== 경험치 및 레벨업 =====
     public void AddExp(float exp)
     {
         currentExp += exp;
 
         while (currentExp >= expToLevelUp)
         {
+            currentExp -= expToLevelUp;
             LevelUp();
         }
     }
 
-    void LevelUp()
+    private void LevelUp()
     {
-        currentExp -= expToLevelUp;
         level++;
-        expToLevelUp *= 1.5f;
-
-        maxHealth += healthIncreasePerLevel;
+        maxHealth += 10;
         currentHealth = maxHealth;
-        attackDamage += damageIncreasePerLevel;
-        moveSpeed += speedIncreasePerLevel;
+        moveSpeed *= levelUpMultiplier;
+        attackDamage *= levelUpMultiplier;
+        expToLevelUp *= 1.2f;
 
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.ShowLevelUpMessage();
-        }
+        Debug.Log($"[PlayerStatus] 레벨업! 현재 레벨: {level}");
     }
 
-    public void TakeDamage(float damage)
+    // ===== 아이템 효과 적용 =====
+    public void ApplyItemEffect(ItemData.ItemType itemType, float amount, float duration)
     {
-        currentHealth -= damage;
-        if (currentHealth <= 0)
+        switch (itemType)
         {
-            Die();
-        }
-    }
+            case ItemData.ItemType.SpeedBoost:
+                ApplySpeedBoost(amount, duration);
+                break;
 
-    void Die()
-    {
-        Debug.Log("플레이어 사망");
+            case ItemData.ItemType.DamageBoost:
+                ApplyDamageBoost(amount, duration);
+                break;
+        }
     }
 
     public void ApplySpeedBoost(float amount, float duration)
     {
-        StopCoroutine("SpeedBoostCoroutine");
-        StartCoroutine(SpeedBoostCoroutine(amount, duration));
+        StartCoroutine(SpeedBoost(amount, duration));
     }
 
     public void ApplyDamageBoost(float amount, float duration)
     {
-        StopCoroutine("DamageBoostCoroutine");
-        StartCoroutine(DamageBoostCoroutine(amount, duration));
+        StartCoroutine(DamageBoost(amount, duration));
     }
 
-    private IEnumerator SpeedBoostCoroutine(float amount, float duration)
+    private IEnumerator SpeedBoost(float amount, float duration)
     {
         moveSpeed = originalSpeed * amount;
-        Debug.Log($"SpeedBoost 활성화: 현재 속도 = {moveSpeed}");
-
+        Debug.Log($"[SpeedBoost] 이동 속도 증가: {moveSpeed}");
         yield return new WaitForSeconds(duration);
-
         moveSpeed = originalSpeed;
-        Debug.Log("SpeedBoost 종료: 속도가 원래대로 돌아왔습니다.");
+        Debug.Log("[SpeedBoost] 이동 속도 복원");
     }
 
-    private IEnumerator DamageBoostCoroutine(float amount, float duration)
+    private IEnumerator DamageBoost(float amount, float duration)
     {
         attackDamage = originalDamage * amount;
-        Debug.Log($"DamageBoost 활성화: 현재 공격력 = {attackDamage}");
-
+        Debug.Log($"[DamageBoost] 공격력 증가: {attackDamage}");
         yield return new WaitForSeconds(duration);
-
         attackDamage = originalDamage;
-        Debug.Log("DamageBoost 종료: 공격력이 원래대로 돌아왔습니다.");
+        Debug.Log("[DamageBoost] 공격력 복원");
     }
 }

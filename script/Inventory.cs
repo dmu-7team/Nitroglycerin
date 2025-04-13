@@ -1,13 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using TMPro;
+using System.Collections;
 
 public class Inventory : MonoBehaviour
 {
     public static Inventory instance;
 
+    [Header("슬롯 설정")]
     public Image[] slots;
     private ItemData[] items;
+
+    [Header("상자 메시지")]
+    public TextMeshProUGUI chestMessageText;
+    private Coroutine chestMessageCoroutine;
 
     private PlayerStatus playerStatus;
     private PlayerInputActions inputActions;
@@ -23,7 +30,6 @@ public class Inventory : MonoBehaviour
         if (playerStatus == null)
             Debug.LogError("[Inventory] PlayerStatus 연결 실패! Player 오브젝트에 붙어 있어야 합니다.");
     }
-
 
     private void Start()
     {
@@ -57,6 +63,8 @@ public class Inventory : MonoBehaviour
                     slots[i].enabled = true;
                 }
 
+                ShowChestMessage("상자를 열었습니다!"); // 메시지 표시
+
                 return true;
             }
         }
@@ -81,4 +89,23 @@ public class Inventory : MonoBehaviour
 
     private void OnEnable() => inputActions?.Player.Enable();
     private void OnDisable() => inputActions?.Player.Disable();
+
+    // 메시지 표시 함수
+    private void ShowChestMessage(string message, float duration = 2f)
+    {
+        if (chestMessageText == null) return;
+
+        if (chestMessageCoroutine != null)
+            StopCoroutine(chestMessageCoroutine);
+
+        chestMessageCoroutine = StartCoroutine(ShowChestMessageCoroutine(message, duration));
+    }
+
+    private IEnumerator ShowChestMessageCoroutine(string message, float duration)
+    {
+        chestMessageText.text = message;
+        chestMessageText.gameObject.SetActive(true);
+        yield return new WaitForSeconds(duration);
+        chestMessageText.gameObject.SetActive(false);
+    }
 }

@@ -1,15 +1,12 @@
-using UnityEngine;
 using TMPro;
-using System.Collections;
+using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    // UI 요소
     public TextMeshProUGUI coinText;
     public TextMeshProUGUI expText;
-    public TextMeshProUGUI levelUpMessageText;
     public TextMeshProUGUI healthText;
     public TextMeshProUGUI damageText;
     public TextMeshProUGUI speedText;
@@ -36,16 +33,12 @@ public class GameManager : MonoBehaviour
 
         if (playerStatus == null)
         {
-            Debug.LogError("PlayerStats를 찾을 수 없습니다! Player 오브젝트에 PlayerStats 컴포넌트가 있는지 확인하세요.");
+            Debug.LogError("PlayerStats를 찾을 수 없습니다!");
             return;
         }
 
         UpdateUI();
     }
-
-    // 내부에 이 두 public 함수가 있어야 함
- // PlayerStatus.cs 안에 아래 두 개 함수 추가!
-
 
     private void Update()
     {
@@ -77,21 +70,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void ShowLevelUpMessage()
-    {
-        if (levelUpMessageText != null)
-        {
-            levelUpMessageText.text = $"레벨 업! 레벨 {playerStatus.level}";
-            levelUpMessageText.gameObject.SetActive(true);
-            StartCoroutine(HideLevelUpMessage());
-        }
-    }
-
-    private IEnumerator HideLevelUpMessage()
-    {
-        yield return new WaitForSeconds(2f);
-        levelUpMessageText.gameObject.SetActive(false);
-    }
     public void ApplyItemEffect(ItemData.ItemType itemType, float effectAmount, float duration, PlayerStatus playerStatus)
     {
         if (playerStatus == null)
@@ -104,17 +82,13 @@ public class GameManager : MonoBehaviour
         {
             case ItemData.ItemType.SpeedBoost:
                 playerStatus.ApplySpeedBoost(effectAmount, duration);
-                Debug.Log($"[GameManager] SpeedBoost 적용됨: x{effectAmount}, {duration}초");
                 break;
 
             case ItemData.ItemType.DamageBoost:
                 playerStatus.ApplyDamageBoost(effectAmount, duration);
-                Debug.Log($"[GameManager] DamageBoost 적용됨: x{effectAmount}, {duration}초");
                 break;
         }
 
         UpdateUI();
     }
-
-
 }

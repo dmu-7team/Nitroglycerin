@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 using System.Collections;
 
 public class PlayerStatus : MonoBehaviour
@@ -19,11 +20,21 @@ public class PlayerStatus : MonoBehaviour
     public float expToLevelUp = 100f;
     public float levelUpMultiplier = 1.2f;
 
+    // ===== UI 메시지 =====
+    public TextMeshProUGUI levelUpMessageText;
+    public TextMeshProUGUI itemEffectText;
+    private Coroutine levelUpCoroutine;
+    private Coroutine itemEffectCoroutine;
+
     private void Awake()
     {
         currentHealth = maxHealth;
         originalSpeed = moveSpeed;
         originalDamage = attackDamage;
+
+        // 메시지 기본 숨김
+        levelUpMessageText?.gameObject.SetActive(false);
+        itemEffectText?.gameObject.SetActive(false);
     }
 
     // ===== 체력 처리 =====
@@ -65,6 +76,8 @@ public class PlayerStatus : MonoBehaviour
         expToLevelUp *= 1.2f;
 
         Debug.Log($"[PlayerStatus] 레벨업! 현재 레벨: {level}");
+
+        ShowLevelUpMessage($"레벨업! 레벨 {level}", 2f);
     }
 
     // ===== 아이템 효과 적용 =====
@@ -74,10 +87,12 @@ public class PlayerStatus : MonoBehaviour
         {
             case ItemData.ItemType.SpeedBoost:
                 ApplySpeedBoost(amount, duration);
+                ShowItemEffectText("스피드 증가!", duration);
                 break;
 
             case ItemData.ItemType.DamageBoost:
                 ApplyDamageBoost(amount, duration);
+                ShowItemEffectText("공격력 증가!", duration);
                 break;
         }
     }
@@ -108,5 +123,34 @@ public class PlayerStatus : MonoBehaviour
         yield return new WaitForSeconds(duration);
         attackDamage = originalDamage;
         Debug.Log("[DamageBoost] 공격력 복원");
+    }
+
+    // ===== 메시지 출력 =====
+    public void ShowLevelUpMessage(string message, float duration = 2f)
+    {
+        if (levelUpMessageText == null) return;
+
+        if (levelUpCoroutine != null)
+            StopCoroutine(levelUpCoroutine);
+
+        levelUpCoroutine = StartCoroutine(ShowMessageCoroutine(levelUpMessageText, message, duration));
+    }
+
+    public void ShowItemEffectText(string message, float duration = 2f)
+    {
+        if (itemEffectText == null) return;
+
+        if (itemEffectCoroutine != null)
+            StopCoroutine(itemEffectCoroutine);
+
+        itemEffectCoroutine = StartCoroutine(ShowMessageCoroutine(itemEffectText, message, duration));
+    }
+
+    private IEnumerator ShowMessageCoroutine(TextMeshProUGUI target, string message, float duration)
+    {
+        target.text = message;
+        target.gameObject.SetActive(true);
+        yield return new WaitForSeconds(duration);
+        target.gameObject.SetActive(false);
     }
 }

@@ -712,8 +712,6 @@ MonoBehaviour:
   currentExp: 0
   expToLevelUp: 100
   levelUpMultiplier: 1.2
-  levelUpMessageText: {fileID: 683441277}
-  itemEffectText: {fileID: 872922115}
 --- !u!114 &360183309
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -730,7 +728,6 @@ MonoBehaviour:
   - {fileID: 750308680}
   - {fileID: 393625757}
   - {fileID: 454353552}
-  chestMessageText: {fileID: 1391540829}
 --- !u!1 &379795647
 GameObject:
   m_ObjectHideFlags: 0
@@ -760,11 +757,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce3b8ea0005a4c141b9f0bf0f158a9ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  coinText: {fileID: 221615909}
-  expText: {fileID: 744578151}
-  healthText: {fileID: 946466172}
-  damageText: {fileID: 1828947991}
-  speedText: {fileID: 543268371}
+  coinCount: 0
 --- !u!4 &379795649
 Transform:
   m_ObjectHideFlags: 0
@@ -1957,6 +1950,7 @@ RectTransform:
   - {fileID: 1578787574}
   - {fileID: 2119865389}
   - {fileID: 190347817}
+  - {fileID: 1127060984}
   m_Father: {fileID: 114929546}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2012,6 +2006,62 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1127060983
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1127060984}
+  - component: {fileID: 1127060985}
+  m_Layer: 0
+  m_Name: UIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1127060984
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127060983}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1028027530}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 532}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1127060985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127060983}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9878d6beff0018441b70c3f48525d12d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chestMessageText: {fileID: 1391540829}
+  levelUpMessageText: {fileID: 683441277}
+  itemEffectText: {fileID: 872922115}
+  coinText: {fileID: 221615909}
+  expText: {fileID: 744578151}
+  healthText: {fileID: 946466172}
+  damageText: {fileID: 1828947991}
+  speedText: {fileID: 543268371}
 --- !u!1 &1268476539
 GameObject:
   m_ObjectHideFlags: 0

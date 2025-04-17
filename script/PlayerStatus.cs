@@ -17,6 +17,8 @@ public class PlayerStatus : MonoBehaviour
     public float expToLevelUp = 100f;
     public float levelUpMultiplier = 1.2f;
 
+    private bool isDead = false;
+
     private void Awake()
     {
         currentHealth = maxHealth;
@@ -26,17 +28,56 @@ public class PlayerStatus : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        if (isDead) return;
+
         currentHealth -= damage;
         if (currentHealth <= 0)
         {
             currentHealth = 0;
             Die();
         }
+
+        UIManager.instance.SetHealth(currentHealth, maxHealth);
     }
 
     private void Die()
     {
-        Debug.Log("[PlayerStatus] 플레이어 사망 처리");
+        if (isDead) return;
+        isDead = true;
+
+        Debug.Log("[PlayerStatus] 플레이어 사망!");
+        UIManager.instance.ShowItemEffectMessage("사망", 3f);
+
+        // 움직임 및 입력 차단
+        var move = GetComponent<Player_Move>();
+        if (move != null) move.enabled = false;
+
+        var controller = GetComponent<PlayerController>();
+        if (controller != null) controller.enabled = false;
+
+        // 리스폰 타이머 시작
+        StartCoroutine(Respawn(5f));
+    }
+
+    private IEnumerator Respawn(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        isDead = false;
+        currentHealth = maxHealth;
+
+        // 위치 초기화
+        transform.position = Vector3.zero;
+
+        // 다시 이동 가능하게
+        var move = GetComponent<Player_Move>();
+        if (move != null) move.enabled = true;
+
+        var controller = GetComponent<PlayerController>();
+        if (controller != null) controller.enabled = true;
+
+        UIManager.instance.SetHealth(currentHealth, maxHealth);
+        Debug.Log("[PlayerStatus] 리스폰 완료");
     }
 
     public void AddExp(float exp)
@@ -59,7 +100,7 @@ public class PlayerStatus : MonoBehaviour
         attackDamage *= levelUpMultiplier;
         expToLevelUp *= 1.2f;
 
-        Debug.Log($"[PlayerStatus] 레벨업! 현재 레벨: {level}");
+        UIManager.instance.SetHealth(currentHealth, maxHealth);
         UIManager.instance.ShowLevelUpMessage($"레벨업! 레벨 {level}", 2f);
     }
 
@@ -71,6 +112,7 @@ public class PlayerStatus : MonoBehaviour
                 ApplySpeedBoost(amount, duration);
                 UIManager.instance.ShowItemEffectMessage("스피드 증가!", duration);
                 break;
+
             case ItemData.ItemType.DamageBoost:
                 ApplyDamageBoost(amount, duration);
                 UIManager.instance.ShowItemEffectMessage("공격력 증가!", duration);

@@ -19,6 +19,9 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI damageText;
     public TextMeshProUGUI speedText;
 
+    [Header("체력바 UI")] //  추가
+    public Image healthBarImage; //  추가
+
     private Coroutine chestMessageCoroutine;
     private Coroutine levelUpCoroutine;
     private Coroutine itemEffectCoroutine;
@@ -36,11 +39,35 @@ public class UIManager : MonoBehaviour
         itemEffectText?.gameObject.SetActive(false);
     }
 
-    public void SetCoin(int amount) => coinText.text = $"코인 : {amount}";
-    public void SetExp(float current, float max) => expText.text = $"{current}/{max}";
-    public void SetHealth(int current, int max) => healthText.text = $"{current}/{max}";
-    public void SetDamage(float amount) => damageText.text = $"공격력: {amount}";
-    public void SetSpeed(float amount) => speedText.text = $"속도: {amount}";
+    public void SetCoin(int amount)
+    {
+        coinText.text = $"코인 : {amount}";
+    }
+
+    public void SetExp(float current, float max)
+    {
+        expText.text = $"{current}/{max}";
+    }
+
+    public void SetHealth(int current, int max)
+    {
+        healthText.text = $"{current}/{max}";
+
+        if (healthBarImage != null)
+        {
+            healthBarImage.fillAmount = (float)current / max;
+        }
+    }
+
+    public void SetDamage(float amount)
+    {
+        damageText.text = $"공격력: {amount}";
+    }
+
+    public void SetSpeed(float amount)
+    {
+        speedText.text = $"속도: {amount}";
+    }
 
     public void ShowChestMessage(string message, float duration = 2f)
     {

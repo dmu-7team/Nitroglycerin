@@ -19,12 +19,19 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI damageText;
     public TextMeshProUGUI speedText;
 
-    [Header("체력바 UI")] //  추가
-    public Image healthBarImage; //  추가
+    [Header("체력바 UI")]
+    public Image healthBarImage;
 
+    [Header("경험치바 UI")]
+    public Image expBarImage; // 경험치바 추가
+
+    private Coroutine expBarCoroutine; // 경험치 애니메이션용
+    private Coroutine healthBarCoroutine; //  추가 (현재 재생 중인 체력 애니메이션 기억)
     private Coroutine chestMessageCoroutine;
     private Coroutine levelUpCoroutine;
     private Coroutine itemEffectCoroutine;
+    private Coroutine healthBlinkCoroutine; 
+    private bool isBlinking = false;         
 
     private void Awake()
     {
@@ -39,15 +46,22 @@ public class UIManager : MonoBehaviour
         itemEffectText?.gameObject.SetActive(false);
     }
 
-    public void SetCoin(int amount)
-    {
-        coinText.text = $"코인 : {amount}";
-    }
-
+    public void SetCoin(int amount) => coinText.text = $"코인 : {amount}";
     public void SetExp(float current, float max)
     {
         expText.text = $"{current}/{max}";
+
+        if (expBarImage != null)
+        {
+            float targetFill = current / max;
+
+            if (expBarCoroutine != null)
+                StopCoroutine(expBarCoroutine);
+
+            expBarCoroutine = StartCoroutine(AnimateExpBar(targetFill));
+        }
     }
+
 
     public void SetHealth(int current, int max)
     {
@@ -55,19 +69,59 @@ public class UIManager : MonoBehaviour
 
         if (healthBarImage != null)
         {
-            healthBarImage.fillAmount = (float)current / max;
+            float targetFill = (float)current / max;
+
+            if (healthBarCoroutine != null)
+                StopCoroutine(healthBarCoroutine);
+
+            healthBarCoroutine = StartCoroutine(AnimateHealthBar(targetFill));
+
+            // 체력 색상 변경
+            if (targetFill <= 0.3f)
+            {
+                healthBarImage.color = Color.red;
+            }
+            else
+            {
+                healthBarImage.color = Color.green;
+            }
+
+            //  깜빡이기 처리 추가
+            if (targetFill <= 0.1f)
+            {
+                if (!isBlinking)
+                {
+                    isBlinking = true;
+                    healthBlinkCoroutine = StartCoroutine(BlinkHealthBar());
+                }
+            }
+            else
+            {
+                if (isBlinking)
+                {
+                    isBlinking = false;
+                    if (healthBlinkCoroutine != null)
+                        StopCoroutine(healthBlinkCoroutine);
+                    healthBarImage.enabled = true; // 깜빡임 중지하고 다시 켬
+                }
+            }
+        }
+    }
+    
+
+    //  체력바 깜빡이는 코루틴
+    private IEnumerator BlinkHealthBar()
+    {
+        while (true)
+        {
+            healthBarImage.enabled = !healthBarImage.enabled;
+            yield return new WaitForSeconds(0.3f); // 0.3초 간격으로 깜빡
         }
     }
 
-    public void SetDamage(float amount)
-    {
-        damageText.text = $"공격력: {amount}";
-    }
 
-    public void SetSpeed(float amount)
-    {
-        speedText.text = $"속도: {amount}";
-    }
+    public void SetDamage(float amount) => damageText.text = $"공격력: {amount}";
+    public void SetSpeed(float amount) => speedText.text = $"속도: {amount}";
 
     public void ShowChestMessage(string message, float duration = 2f)
     {
@@ -94,4 +148,38 @@ public class UIManager : MonoBehaviour
         yield return new WaitForSeconds(duration);
         target.gameObject.SetActive(false);
     }
+
+    //  추가: 체력바 부드럽게 애니메이션
+    private IEnumerator AnimateHealthBar(float targetFill)
+    {
+        float duration = 0.5f; // 부드럽게 이동하는 데 걸리는 시간
+        float elapsed = 0f;
+        float startFill = healthBarImage.fillAmount;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            healthBarImage.fillAmount = Mathf.Lerp(startFill, targetFill, elapsed / duration);
+            yield return null;
+        }
+
+        healthBarImage.fillAmount = targetFill; // 최종 값 정확히 맞추기
+    }
+    //  경험치바 부드럽게 채우는 코루틴
+    private IEnumerator AnimateExpBar(float targetFill)
+    {
+        float duration = 0.5f;
+        float elapsed = 0f;
+        float startFill = expBarImage.fillAmount;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            expBarImage.fillAmount = Mathf.Lerp(startFill, targetFill, elapsed / duration);
+            yield return null;
+        }
+
+        expBarImage.fillAmount = targetFill;
+    }
+
 }

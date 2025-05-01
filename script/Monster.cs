@@ -2,14 +2,20 @@ using UnityEngine;
 
 public class Monster : MonoBehaviour
 {
+    [Header("ëª¬ìŠ¤í„° ì„¤ì •")]
     public float moveSpeed = 3f;
     public float attackDamage = 10f;
     public float attackCooldown = 1f;
     public float maxHealth = 50f;
-    public GameObject treasureChestPrefab; // º¸¹°»óÀÚ ÇÁ¸®ÆÕ
-    public float treasureChestDropChance = 0.5f; // º¸¹°»óÀÚ µå·Ó È®·ü (50%)
+    public GameObject treasureChestPrefab;
+    public float treasureChestDropChance = 0.5f;
     public float expReward = 10f;
     public int coinReward = 1;
+
+    [Header("ë¯¸ë‹ˆë§µ ì„¤ì •")]
+    public RectTransform miniMapIconPrefab;    // ë¯¸ë‹ˆë§µì— ë„ìš¸ ëª¬ìŠ¤í„° ì•„ì´ì½˜ í”„ë¦¬íŒ¹
+    private Transform miniMapIconsParent;      // ë¯¸ë‹ˆë§µ ì•„ì´ì½˜ë“¤ì´ ë¶™ëŠ” ë¶€ëª¨ (ëŸ°íƒ€ì„ì— ì°¾ìŒ)
+    private RectTransform miniMapIconInstance; // ìƒì„±ëœ ì•„ì´ì½˜ ì¸ìŠ¤í„´ìŠ¤
 
     private Transform player;
     private Rigidbody rb;
@@ -22,10 +28,41 @@ public class Monster : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         currentHealth = maxHealth;
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (player == null)
         {
-            Debug.LogError("ÇÃ·¹ÀÌ¾î¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! player ¿ÀºêÁ§Æ®ÀÇ Tag°¡ 'Player'·Î ¼³Á¤µÇ¾î ÀÖ´ÂÁö È®ÀÎÇÏ¼¼¿ä.", this);
+            Debug.LogError("í”Œë ˆì´ì–´ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤! Player íƒœê·¸ í™•ì¸ í•„ìš”.", this);
+        }
+
+        // MiniMapIconsParent ìë™ ì°¾ê¸°
+        if (miniMapIconsParent == null)
+        {
+            GameObject parentObj = GameObject.Find("MiniMapIconsParent");
+            if (parentObj != null)
+            {
+                miniMapIconsParent = parentObj.transform;
+            }
+            else
+            {
+                Debug.LogError("MiniMapIconsParent ì˜¤ë¸Œì íŠ¸ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!", this);
+            }
+        }
+
+        // ë¯¸ë‹ˆë§µ ì•„ì´ì½˜ ìƒì„±
+        if (miniMapIconPrefab != null && miniMapIconsParent != null)
+        {
+            miniMapIconInstance = Instantiate(miniMapIconPrefab, miniMapIconsParent);
+            MiniMapManager miniMapManager = FindFirstObjectByType<MiniMapManager>(); // ìµœì‹  API
+            if (miniMapManager != null)
+            {
+                MiniMapIconData iconData = new MiniMapIconData
+                {
+                    target = transform,
+                    icon = miniMapIconInstance
+                };
+                miniMapManager.AddMonsterIcon(iconData);
+            }
         }
     }
 
@@ -35,53 +72,38 @@ public class Monster : MonoBehaviour
 
         Vector3 direction = (player.position - transform.position).normalized;
         Vector3 move = direction * moveSpeed;
-        move.y = rb.linearVelocity.y;
+        move.y = rb.linearVelocity.y; // ìµœì‹  API: velocity â†’ linearVelocity
         rb.linearVelocity = move;
-        Debug.Log("¸ó½ºÅÍ À§Ä¡: " + transform.position);
     }
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("¸ó½ºÅÍ Ãæµ¹ °¨Áö: " + other.name + ", ÅÂ±×: " + other.tag);
         if (other.CompareTag("Player"))
         {
-            Debug.Log("ÇÃ·¹ÀÌ¾î¿Í Ãæµ¹ °¨ÁöµÊ, °ø°İ ½Ãµµ");
             if (Time.time - lastAttackTime >= attackCooldown)
             {
                 Attack(other);
                 lastAttackTime = Time.time;
             }
-            else
-            {
-                Debug.Log("°ø°İ Äğ´Ù¿î Áß: " + (Time.time - lastAttackTime) + "/" + attackCooldown);
-            }
         }
         else if (other.CompareTag("Missile"))
         {
             TakeDamage(20f);
-            Debug.Log("¸ó½ºÅÍ°¡ ¹Ì»çÀÏ¿¡ ¸ÂÀ½: " + other.name);
         }
     }
 
     void Attack(Collider other)
     {
-        Debug.Log("Attack ¸Ş¼­µå È£Ãâ, ´ë»ó: " + other.name);
-        PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-        if (playerHealth != null)
+        PlayerStatus playerStatus = other.GetComponent<PlayerStatus>();
+        if (playerStatus != null)
         {
-            playerHealth.TakeDamage(attackDamage);
-            Debug.Log("¸ó½ºÅÍ°¡ ÇÃ·¹ÀÌ¾î¸¦ °ø°İ: " + attackDamage + " µ¥¹ÌÁö");
-        }
-        else
-        {
-            Debug.LogError("PlayerHealth ÄÄÆ÷³ÍÆ®¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! ¿ÀºêÁ§Æ®: " + other.name, this);
+            playerStatus.TakeDamage((int)attackDamage);
         }
     }
 
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
-        Debug.Log("¸ó½ºÅÍ Ã¼·Â: " + currentHealth + "/" + maxHealth);
         if (currentHealth <= 0)
         {
             Die();
@@ -90,41 +112,31 @@ public class Monster : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("Die ¸Ş¼­µå ½ÇÇà ½ÃÀÛ");
-
-        // º¸¹°»óÀÚ µå·Ó
-        if (Random.value <= treasureChestDropChance)
+        // ë³´ë¬¼ìƒì ë“œë¡­
+        if (Random.value <= treasureChestDropChance && treasureChestPrefab != null)
         {
-            if (treasureChestPrefab != null)
-            {
-                Vector3 dropPosition = transform.position;
-                dropPosition.y = 1.0f;
-                GameObject chest = Instantiate(treasureChestPrefab, dropPosition, Quaternion.identity);
-                Debug.Log($"¸ó½ºÅÍ°¡ º¸¹°»óÀÚ¸¦ µå·ÓÇß½À´Ï´Ù: À§Ä¡: {dropPosition}");
-            }
-            else
-            {
-                Debug.LogWarning("º¸¹°»óÀÚ ÇÁ¸®ÆÕÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù!", this);
-            }
+            Vector3 dropPosition = transform.position;
+            dropPosition.y = 1.0f;
+            Instantiate(treasureChestPrefab, dropPosition, Quaternion.identity);
         }
 
         if (GameManager.Instance != null)
         {
             GameManager.Instance.AddExperience(expReward);
             GameManager.Instance.AddCoin(coinReward);
-            Debug.Log($"¸ó½ºÅÍ »ç¸ÁÀ¸·Î °æÇèÄ¡: {expReward}, ÄÚÀÎ: {coinReward} È¹µæ");
-        }
-        else
-        {
-            Debug.LogError("GameManager¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! GameManager ¿ÀºêÁ§Æ®°¡ ¾À¿¡ ÀÖ´ÂÁö È®ÀÎÇÏ¼¼¿ä.", this);
         }
 
         Destroy(gameObject);
-        Debug.Log("¸ó½ºÅÍ°¡ ÆÄ±«µÇ¾ú½À´Ï´Ù!");
     }
 
     void OnDestroy()
     {
         OnMonsterDestroy?.Invoke();
+
+        // ë¯¸ë‹ˆë§µ ì•„ì´ì½˜ ì‚­ì œ
+        if (miniMapIconInstance != null)
+        {
+            Destroy(miniMapIconInstance.gameObject);
+        }
     }
 }

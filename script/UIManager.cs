@@ -30,7 +30,9 @@ public class UIManager : MonoBehaviour
     private Coroutine chestMessageCoroutine;
     private Coroutine levelUpCoroutine;
     private Coroutine itemEffectCoroutine;
-    private Coroutine healthBlinkCoroutine; 
+    private Coroutine healthBlinkCoroutine;
+    private Coroutine expLevelUpEffectCoroutine; //  레벨업 이펙트 코루틴 저장
+
     private bool isBlinking = false;         
 
     private void Awake()
@@ -180,6 +182,35 @@ public class UIManager : MonoBehaviour
         }
 
         expBarImage.fillAmount = targetFill;
+    }
+    // 경험치바 레벨업 반짝이는 이펙트
+    public void PlayExpLevelUpEffect()
+    {
+        if (expBarImage == null) return;
+
+        if (expLevelUpEffectCoroutine != null)
+            StopCoroutine(expLevelUpEffectCoroutine);
+
+        expLevelUpEffectCoroutine = StartCoroutine(ExpLevelUpEffect());
+    }
+
+    private IEnumerator ExpLevelUpEffect()
+    {
+        Color originalColor = expBarImage.color;
+        Color highlightColor = Color.yellow; // 반짝일 때 노란색으로 (원하는 색 가능)
+
+        float flashDuration = 0.2f; // 한번 반짝이는 시간
+        int flashCount = 3; // 몇 번 반짝일지
+
+        for (int i = 0; i < flashCount; i++)
+        {
+            expBarImage.color = highlightColor;
+            yield return new WaitForSeconds(flashDuration);
+            expBarImage.color = originalColor;
+            yield return new WaitForSeconds(flashDuration);
+        }
+
+        expBarImage.color = originalColor; // 마지막에 원래 색 복구
     }
 
 }
